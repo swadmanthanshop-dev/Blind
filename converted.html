@@ -1,0 +1,360 @@
+<p>
+    &lt;!DOCTYPE html&gt;
+</p>
+<p>
+    &lt;html lang="en"&gt;
+</p>
+<p>
+    &lt;head&gt;
+</p>
+<p>
+        &lt;meta charset="UTF-8"&gt;
+</p>
+<p>
+        &lt;meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"&gt;
+</p>
+<p>
+        &lt;title&gt;AI Vision Feedback Assistant&lt;/title&gt;
+</p>
+<p>
+        &lt;style&gt;
+</p>
+<p>
+            body {
+</p>
+<p>
+                margin: 0; padding: 0; background: #111;
+</p>
+<p>
+                font-family: Arial, sans-serif; color: #fff;
+</p>
+<p>
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+</p>
+<p>
+                height: 100vh; overflow: hidden;
+</p>
+<p>
+            }
+</p>
+<p>
+            video {
+</p>
+<p>
+                width: 100%; height: 70vh; object-fit: cover;
+</p>
+<p>
+                transform: scaleX(1); /* Set to -1 if using front camera */
+</p>
+<p>
+            }
+</p>
+<p>
+            #ui-panel {
+</p>
+<p>
+                width: 100%; height: 30vh; display: flex; flex-direction: column;
+</p>
+<p>
+                justify-content: center; align-items: center; background: #222;
+</p>
+<p>
+            }
+</p>
+<p>
+            button {
+</p>
+<p>
+                padding: 20px 40px; font-size: 24px; font-weight: bold;
+</p>
+<p>
+                background: #00e676; border: none; border-radius: 50px; cursor: pointer;
+</p>
+<p>
+            }
+</p>
+<p>
+            #status { margin-top: 15px; font-size: 18px; color: #ccc; text-align: center; width: 90%; }
+</p>
+<p>
+        &lt;/style&gt;
+</p>
+<p>
+    &lt;/head&gt;
+</p>
+<p>
+    &lt;body&gt;
+</p>
+<p>
+        &lt;!-- Video Feed from back camera --&gt;
+</p>
+<p>
+        &lt;video id="video" autoplay playsinline&gt;&lt;/video&gt;
+</p>
+<p>
+        &lt;!-- Control Panel --&gt;
+</p>
+<p>
+        &lt;div id="ui-panel"&gt;
+</p>
+<p>
+            &lt;button id="start-btn"&gt;TAP TO ACTIVATE ASSISTANT&lt;/button&gt;
+</p>
+<p>
+            &lt;div id="status"&gt;System idle. Tap button to activate audio and camera tracking loop.&lt;/div&gt;
+</p>
+<p>
+        &lt;/div&gt;
+</p>
+<p>
+        &lt;script&gt;
+</p>
+<p>
+            const video = document.getElementById('video');
+</p>
+<p>
+            const startBtn = document.getElementById('start-btn');
+</p>
+<p>
+            const statusDiv = document.getElementById('status');
+</p>
+<p>
+            let isRunning = false;
+</p>
+<p>
+            let lastSpeechTime = 0;
+</p>
+<p>
+            // CAMERA CALIBRATION CONSTANTS (Triangle Similarity: F = (P * D) / W)
+</p>
+<p>
+            const KNOWN_WIDTH = 50;       // Average width of a person or large hurdle in centimeters (~50cm)
+</p>
+<p>
+            const FOCAL_LENGTH = 650;     // Pre-calibrated focal length factor for typical mobile lenses
+</p>
+<p>
+            // Initialize Speech Synthesis
+</p>
+<p>
+            const synth = window.speechSynthesis;
+</p>
+<p>
+            async function startSystem() {
+</p>
+<p>
+                try {
+</p>
+<p>
+                    // Request back camera access with optimal resolution parameters
+</p>
+<p>
+                    const stream = await navigator.mediaDevices.getUserMedia({
+</p>
+<p>
+                        video: { facingMode: { exact: "environment" }, width: 640, height: 480 }
+</p>
+<p>
+                    });
+</p>
+<p>
+                    video.srcObject = stream;
+</p>
+<p>
+                    isRunning = true;
+</p>
+<p>
+                    statusDiv.innerText = "Tracking active. Scanning space ahead...";
+</p>
+<p>
+                    startBtn.style.backgroundColor = "#ff1744";
+</p>
+<p>
+                    startBtn.innerText = "SYSTEM RUNNING";
+</p>
+<p>
+</p>
+<p>
+                    speak("AI Navigation Active. Path scanning running.", 1.0);
+</p>
+<p>
+</p>
+<p>
+                    // Start processing loops
+</p>
+<p>
+                    requestAnimationFrame(processFrameLoop);
+</p>
+<p>
+                } catch (err) {
+</p>
+<p>
+                    statusDiv.innerText = "Error accessing back camera. Ensure permissions are granted.";
+</p>
+<p>
+                    console.error(err);
+</p>
+<p>
+                }
+</p>
+<p>
+            }
+</p>
+<p>
+            // Central Text-to-Speech Engine with speed override adjustments
+</p>
+<p>
+            function speak(text, speedRate) {
+</p>
+<p>
+                if (synth.speaking) return; // Prevent audio overlap stacking
+</p>
+<p>
+                const utterance = new SpeechSynthesisUtterance(text);
+</p>
+<p>
+                utterance.rate = speedRate; // Speeds up text vocalization dynamically
+</p>
+<p>
+                synth.speak(utterance);
+</p>
+<p>
+            }
+</p>
+<p>
+            function processFrameLoop() {
+</p>
+<p>
+                if (!isRunning) return;
+</p>
+<p>
+                // In a production build, you can run a tfjs object model here.
+</p>
+<p>
+                // For this layout simulation, we simulate scanning an obstacle cross-section profile.
+</p>
+<p>
+                let simulatedPixelWidth = Math.floor(Math.random() * (400 - 50 + 1)) + 50; 
+</p>
+<p>
+                // Calculate Distance: D = (W * F) / P
+</p>
+<p>
+                let distanceCm = (KNOWN_WIDTH * FOCAL_LENGTH) / simulatedPixelWidth;
+</p>
+<p>
+                let distanceMeters = (distanceCm / 100).toFixed(1);
+</p>
+<p>
+                let currentTime = Date.now();
+</p>
+<p>
+</p>
+<p>
+                // DYNAMIC LOOP: Speak faster and more frequently as distance drops
+</p>
+<p>
+                if (distanceMeters &lt; 1.5) {
+</p>
+<p>
+                    // Urgent Critical Proximity Check
+</p>
+<p>
+                    if (currentTime - lastSpeechTime &gt; 1000) { 
+</p>
+<p>
+                        speak("Obstacle close. " + distanceMeters + " meters. Step left now.", 1.8);
+</p>
+<p>
+                        statusDiv.innerText = `CRITICAL: ${distanceMeters}m! Turn Left.`;
+</p>
+<p>
+                        lastSpeechTime = currentTime;
+</p>
+<p>
+                    }
+</p>
+<p>
+                } else if (distanceMeters &lt; 3.0) {
+</p>
+<p>
+                    // Standard Approaching Caution Check
+</p>
+<p>
+                    if (currentTime - lastSpeechTime &gt; 2500) {
+</p>
+<p>
+                        speak("Obstacle ahead at " + distanceMeters + " meters. Clear to proceed slow.", 1.2);
+</p>
+<p>
+                        statusDiv.innerText = `WARNING: Object at ${distanceMeters}m.`;
+</p>
+<p>
+                        lastSpeechTime = currentTime;
+</p>
+<p>
+                    }
+</p>
+<p>
+                } else {
+</p>
+<p>
+                    // Clear Path Routine
+</p>
+<p>
+                    if (currentTime - lastSpeechTime &gt; 5000) {
+</p>
+<p>
+                        speak("Path clear for " + distanceMeters + " meters. Walk straight.", 1.0);
+</p>
+<p>
+                        statusDiv.innerText = `PATH CLEAR: Safe distance ${distanceMeters}m.`;
+</p>
+<p>
+                        lastSpeechTime = currentTime;
+</p>
+<p>
+                    }
+</p>
+<p>
+                }
+</p>
+<p>
+                // Keep looping over every camera frame processing ticket
+</p>
+<p>
+                setTimeout(() =&gt; {
+</p>
+<p>
+                    requestAnimationFrame(processFrameLoop);
+</p>
+<p>
+                }, 300); // Check 3 times a second to prevent CPU overload
+</p>
+<p>
+            }
+</p>
+<p>
+            startBtn.addEventListener('click', () =&gt; {
+</p>
+<p>
+                if (!isRunning) {
+</p>
+<p>
+                    startSystem();
+</p>
+<p>
+                }
+</p>
+<p>
+            });
+</p>
+<p>
+        &lt;/script&gt;
+</p>
+<p>
+    &lt;/body&gt;
+</p>
+<p>
+    &lt;/html&gt;
+</p>
